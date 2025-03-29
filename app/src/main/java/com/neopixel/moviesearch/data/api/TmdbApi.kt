@@ -1,14 +1,24 @@
 package com.neopixel.moviesearch.data.api
 
-import com.neopixel.moviesearch.data.model.MovieSearchResponse
+import com.neopixel.moviesearch.data.model.MovieDetailsResponse
+import com.neopixel.moviesearch.data.model.MovieResponse
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface TmdbApi {
+interface TMDbApi {
     @GET("search/movie")
     suspend fun searchMovies(
         @Query("api_key") apiKey: String,
         @Query("query") query: String,
-        @Query("page") page: Int = 1
-    ): MovieSearchResponse
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = "en-US"
+    ): MovieResponse
+
+    @GET("movie/{movie_id}")
+    suspend fun getMovieDetails(
+        @Path("movie_id") movieId: Int,
+        @Query("api_key") apiKey: String,
+        @Query("language") language: String = "en-US"
+    ): MovieDetailsResponse
 } 

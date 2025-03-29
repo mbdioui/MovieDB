@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintSet
 import com.neopixel.moviesearch.ui.theme.MovieSearchTheme
 import kotlinx.coroutines.launch
 

@@ -11,14 +11,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.neopixel.moviesearch.data.ResultWrapper
-import com.neopixel.moviesearch.data.model.MovieDTO
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.neopixel.moviesearch.ui.components.EmptyState
 import com.neopixel.moviesearch.ui.components.MovieCard
 import com.neopixel.moviesearch.ui.components.MovieCardShimmer
+import com.neopixel.moviesearch.ui.home.HomeViewModel
+import com.neopixel.moviesearch.ui.home.HomeViewModelFactory
 import com.neopixel.moviesearch.ui.theme.MovieSearchTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,17 +28,32 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MovieSearchTheme {
-                var searchQuery by remember { mutableStateOf("") }
-                var movies by remember { mutableStateOf<List<MovieDTO>>(emptyList()) }
-                var isLoading by remember { mutableStateOf(false) }
+                val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+                val searchQuery by viewModel.searchQuery.collectAsState()
+                val movies by viewModel.movies.collectAsState()
+                val isLoading by viewModel.isLoading.collectAsState()
+                val error by viewModel.error.collectAsState()
+
+                val snackbarHostState = remember { SnackbarHostState() }
+
+                // Show error snackbar if there's an error
+                LaunchedEffect(error) {
+                    error?.let {
+                        snackbarHostState.showSnackbar(
+                            message = it,
+                            duration = SnackbarDuration.Short
+                        )
+                        viewModel.clearError()
+                    }
+                }
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = {
                         SearchBar(
                             query = searchQuery,
-                            onQueryChange = { searchQuery = it },
-                            onSearch = { /* TODO: Implement search */ },
+                            onQueryChange = { viewModel.updateSearchQuery(it) },
+                            onSearch = { viewModel.updateSearchQuery(searchQuery) },
                             active = false,
                             onActiveChange = {},
                             placeholder = { Text("Search movies...") },
@@ -47,7 +62,8 @@ class MainActivity : ComponentActivity() {
                                 .fillMaxWidth()
                                 .padding(16.dp)
                         ) {}
-                    }
+                    },
+                    snackbarHost = { SnackbarHost(snackbarHostState) }
                 ) { paddingValues ->
                     Box(
                         modifier = Modifier

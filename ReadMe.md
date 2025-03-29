@@ -25,3 +25,7 @@ add dependencies on build.gradle(app) :
 *refactor code with hilt 
 *clean code with repository 
 *externalise composable
+
+
+#last commit detail movie
+* detail movie

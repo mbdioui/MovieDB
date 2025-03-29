@@ -24,7 +24,9 @@ data class MovieDetailsResponse(
     @SerializedName("budget")
     val budget: Long,
     @SerializedName("revenue")
-    val revenue: Long
+    val revenue: Long,
+    @SerializedName("homepage")
+    val homepage: String?
 )
 
 data class Genre(

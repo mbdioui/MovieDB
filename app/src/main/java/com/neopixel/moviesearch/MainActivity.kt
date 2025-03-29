@@ -14,9 +14,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.neopixel.moviesearch.ui.components.EmptyState
 import com.neopixel.moviesearch.ui.components.MovieCard
 import com.neopixel.moviesearch.ui.components.MovieCardShimmer
+import com.neopixel.moviesearch.ui.details.DetailsScreen
 import com.neopixel.moviesearch.ui.home.HomeViewModel
 import com.neopixel.moviesearch.ui.theme.MovieSearchTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -29,6 +35,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MovieSearchTheme {
+                val navController = rememberNavController()
                 val viewModel: HomeViewModel = hiltViewModel()
                 val searchQuery by viewModel.searchQuery.collectAsState()
                 val movies by viewModel.movies.collectAsState()
@@ -48,56 +55,79 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        SearchBar(
-                            query = searchQuery,
-                            onQueryChange = { viewModel.updateSearchQuery(it) },
-                            onSearch = { viewModel.updateSearchQuery(searchQuery) },
-                            active = false,
-                            onActiveChange = {},
-                            placeholder = { Text("Search movies...") },
-                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {}
-                    },
-                    snackbarHost = { SnackbarHost(snackbarHostState) }
-                ) { paddingValues ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(paddingValues)
-                    ) {
-                        when {
-                            isLoading -> {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    items(5) {
-                                        MovieCardShimmer()
+                NavHost(
+                    navController = navController,
+                    startDestination = "home"
+                ) {
+                    composable("home") {
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
+                            topBar = {
+                                SearchBar(
+                                    query = searchQuery,
+                                    onQueryChange = { viewModel.updateSearchQuery(it) },
+                                    onSearch = { viewModel.updateSearchQuery(searchQuery) },
+                                    active = false,
+                                    onActiveChange = {},
+                                    placeholder = { Text("Search movies...") },
+                                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {}
+                            },
+                            snackbarHost = { SnackbarHost(snackbarHostState) }
+                        ) { paddingValues ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(paddingValues)
+                            ) {
+                                when {
+                                    isLoading -> {
+                                        LazyColumn(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentPadding = PaddingValues(16.dp),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            items(5) {
+                                                MovieCardShimmer()
+                                            }
+                                        }
                                     }
-                                }
-                            }
-                            movies.isEmpty() -> {
-                                EmptyState()
-                            }
-                            else -> {
-                                LazyColumn(
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentPadding = PaddingValues(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    items(movies) { movie ->
-                                        MovieCard(movie = movie)
+                                    movies.isEmpty() -> {
+                                        EmptyState()
+                                    }
+                                    else -> {
+                                        LazyColumn(
+                                            modifier = Modifier.fillMaxSize(),
+                                            contentPadding = PaddingValues(16.dp),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            items(movies) { movie ->
+                                                MovieCard(
+                                                    movie = movie,
+                                                    onClick = {
+                                                        navController.navigate("details/${movie.id}")
+                                                    }
+                                                )
+                                            }
+                                        }
                                     }
                                 }
                             }
                         }
+                    }
+
+                    composable(
+                        route = "details/{movieId}",
+                        arguments = listOf(
+                            navArgument("movieId") { type = NavType.IntType }
+                        )
+                    ) {
+                        DetailsScreen(
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     }
                 }
             }

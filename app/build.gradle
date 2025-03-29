@@ -75,6 +75,8 @@ dependencies {
     // ViewModel + Coroutines
     implementation libs.viewmodel.compose
     implementation libs.coroutines
+
+    implementation libs.androidx.compose.material
     
     // Testing
     testImplementation libs.junit

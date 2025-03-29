@@ -4,85 +4,86 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.neopixel.moviesearch.data.ResultWrapper
+import com.neopixel.moviesearch.data.model.MovieDTO
+import com.neopixel.moviesearch.ui.components.EmptyState
+import com.neopixel.moviesearch.ui.components.MovieCard
+import com.neopixel.moviesearch.ui.components.MovieCardShimmer
 import com.neopixel.moviesearch.ui.theme.MovieSearchTheme
-import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val snackbarHostState = remember { SnackbarHostState() }
-            val coroutineScope = rememberCoroutineScope()
-            val scrollState = rememberScrollState(0)
             MovieSearchTheme {
-                Scaffold(modifier = Modifier.fillMaxSize(), snackbarHost = {
-                    SnackbarHost(hostState = snackbarHostState)
-                }) { innerPadding ->
-                    Column(
+                var searchQuery by remember { mutableStateOf("") }
+                var movies by remember { mutableStateOf<List<MovieDTO>>(emptyList()) }
+                var isLoading by remember { mutableStateOf(false) }
+
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = {
+                        SearchBar(
+                            query = searchQuery,
+                            onQueryChange = { searchQuery = it },
+                            onSearch = { /* TODO: Implement search */ },
+                            active = false,
+                            onActiveChange = {},
+                            placeholder = { Text("Search movies...") },
+                            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
+                        ) {}
+                    }
+                ) { paddingValues ->
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .verticalScroll(state = scrollState),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(paddingValues)
                     ) {
-                        Greeting(
-                            name = "Android", modifier = Modifier.padding(innerPadding)
-                        )
-                        Spacer(modifier = Modifier.height(30.dp))
-                        Button(
-                            modifier = Modifier.fillMaxWidth(0.5f),
-                            onClick = {
-                                coroutineScope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "hello snackbar",
-                                        actionLabel = "click me",
-                                        duration = SnackbarDuration.Long,
-                                    )
+                        when {
+                            isLoading -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(5) {
+                                        MovieCardShimmer()
+                                    }
                                 }
-                            }) {
-                            Text("hello click me plz")
+                            }
+                            movies.isEmpty() -> {
+                                EmptyState()
+                            }
+                            else -> {
+                                LazyColumn(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentPadding = PaddingValues(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    items(movies) { movie ->
+                                        MovieCard(movie = movie)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!", modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MovieSearchTheme {
-        Greeting("Android")
     }
 }

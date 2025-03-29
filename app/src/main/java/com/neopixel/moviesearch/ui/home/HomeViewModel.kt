@@ -35,6 +35,9 @@ class HomeViewModel @Inject constructor(
     private val searchCache = mutableMapOf<String, List<MovieDTO>>()
 
     init {
+        // Load popular movies on initialization
+        loadPopularMovies()
+
         // Setup search query debounce
         _searchQuery
             .filter { it.isNotBlank() }
@@ -43,6 +46,21 @@ class HomeViewModel @Inject constructor(
                 searchMovies(query)
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun loadPopularMovies() {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                _movies.value = movieRepository.getPopularMovies()
+            } catch (e: Exception) {
+                _error.value = e.message ?: "An error occurred while loading popular movies"
+                _movies.value = emptyList()
+            } finally {
+                _isLoading.value = false
+            }
+        }
     }
 
     fun updateSearchQuery(query: String) {

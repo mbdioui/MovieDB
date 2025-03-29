@@ -22,4 +22,11 @@ interface TMDbApi {
         @Path("movie_id") movieId: Int,
         @Query("language") language: String = "en-US"
     ): MovieDetailsResponse
+
+    @GET("movie/popular")
+    suspend fun getPopularMovies(
+        @Header("Authorization") authorization: String,
+        @Query("page") page: Int = 1,
+        @Query("language") language: String = "en-US"
+    ): MovieResponse
 } 

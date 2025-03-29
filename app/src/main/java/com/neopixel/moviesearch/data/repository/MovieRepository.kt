@@ -34,4 +34,13 @@ class MovieRepository @Inject constructor(
     } catch (e: Exception) {
         throw e
     }
+
+    suspend fun getPopularMovies(): List<MovieDTO> = try {
+        tmdbApi.getPopularMovies(
+            authorization = "Bearer ${Constants.TMDB_TOKEN}",
+            page = 1
+        ).results
+    } catch (e: Exception) {
+        emptyList()
+    }
 } 

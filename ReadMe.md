@@ -16,3 +16,12 @@ add dependencies on build.gradle(app) :
 - Gestion des erreurs :
 * Classe ResultWrapper (Success/Error/Loading)
 * Intercepteur réseau basique
+
+#third & fourth commit (branch) includes
+*boilerPlate  homePage movies 
+
+
+#fifth commit (branch) includes
+*refactor code with hilt 
+*clean code with repository 
+*externalise composable

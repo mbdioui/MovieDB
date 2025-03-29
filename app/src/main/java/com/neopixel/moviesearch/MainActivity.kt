@@ -13,22 +13,23 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.neopixel.moviesearch.ui.components.EmptyState
 import com.neopixel.moviesearch.ui.components.MovieCard
 import com.neopixel.moviesearch.ui.components.MovieCardShimmer
 import com.neopixel.moviesearch.ui.home.HomeViewModel
-import com.neopixel.moviesearch.ui.home.HomeViewModelFactory
 import com.neopixel.moviesearch.ui.theme.MovieSearchTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             MovieSearchTheme {
-                val viewModel: HomeViewModel = viewModel(factory = HomeViewModelFactory())
+                val viewModel: HomeViewModel = hiltViewModel()
                 val searchQuery by viewModel.searchQuery.collectAsState()
                 val movies by viewModel.movies.collectAsState()
                 val isLoading by viewModel.isLoading.collectAsState()

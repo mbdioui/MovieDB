@@ -2,10 +2,9 @@ package com.neopixel.moviesearch.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.neopixel.moviesearch.data.ResultWrapper
-import com.neopixel.moviesearch.data.api.TMDbApi
 import com.neopixel.moviesearch.data.model.MovieDTO
-import com.neopixel.moviesearch.utils.Constants
+import com.neopixel.moviesearch.data.repository.MovieRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,9 +13,11 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class HomeViewModel(
-    private val tmdbApi: TMDbApi
+@HiltViewModel
+class HomeViewModel @Inject constructor(
+    private val movieRepository: MovieRepository
 ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -62,15 +63,12 @@ class HomeViewModel(
                 }
 
                 // Make API call if not in cache
-                val response = tmdbApi.searchMovies(
-                    authorization = "Bearer ${Constants.TMDB_TOKEN}",
-                    query = query,
-                    page = 1
-                )
-
-                // Update cache and state
-                searchCache[query] = response.results
-                _movies.value = response.results
+                movieRepository.searchMovies(query)
+                    .collect { movies ->
+                        // Update cache and state
+                        searchCache[query] = movies
+                        _movies.value = movies
+                    }
             } catch (e: Exception) {
                 _error.value = e.message ?: "An error occurred while searching movies"
                 _movies.value = emptyList()

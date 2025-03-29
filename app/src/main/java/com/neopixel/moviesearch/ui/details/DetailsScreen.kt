@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ImageNotSupported
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
@@ -20,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.neopixel.moviesearch.utils.Constants
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,6 +35,7 @@ fun DetailsScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val locale = Locale.getDefault()
 
     LaunchedEffect(error) {
         error?.let {
@@ -82,32 +86,62 @@ fun DetailsScreen(
                             .verticalScroll(rememberScrollState())
                     ) {
                         // Backdrop Image
-                        details.backdropPath?.let { backdropPath ->
-                            AsyncImage(
-                                model = "${Constants.IMAGE_BASE_URL}$backdropPath",
-                                contentDescription = details.title,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(200.dp),
-                                contentScale = ContentScale.Crop
-                            )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                        ) {
+                            details.backdropPath?.let { backdropPath ->
+                                AsyncImage(
+                                    model = "${Constants.IMAGE_BASE_URL}$backdropPath",
+                                    contentDescription = details.title,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } ?: run {
+                                Icon(
+                                    imageVector = Icons.Default.ImageNotSupported,
+                                    contentDescription = "No image available",
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .align(Alignment.Center),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
 
                         // Movie Poster Card
-                        details.posterPath?.let { posterPath ->
-                            Card(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .size(120.dp)
-                            ) {
+                        Box(
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .size(120.dp)
+                        ) {
+                            details.posterPath?.let { posterPath ->
                                 AsyncImage(
                                     model = "${Constants.IMAGE_BASE_URL}$posterPath",
                                     contentDescription = details.title,
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
+                            } ?: run {
+                                Icon(
+                                    imageVector = Icons.Default.ImageNotSupported,
+                                    contentDescription = "No image available",
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .align(Alignment.Center),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
+
+                        // Release Date
+                        Text(
+                            text = formatReleaseDate(details.releaseDate, locale),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
 
                         // Rating Stars
                         Row(
@@ -116,7 +150,7 @@ fun DetailsScreen(
                         ) {
                             repeat(5) { index ->
                                 Icon(
-                                    imageVector = if (index < (details.voteAverage / 2).toInt()) 
+                                    imageVector = if (index < Math.round(details.voteAverage / 2)) 
                                         Icons.Filled.Star 
                                     else 
                                         Icons.Outlined.Star,
@@ -150,5 +184,19 @@ fun DetailsScreen(
                 }
             }
         }
+    }
+}
+
+private fun formatReleaseDate(dateString: String, locale: Locale): String {
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val outputFormat = SimpleDateFormat(
+            if (locale.language == "fr") "dd MMMM yyyy" else "MMMM dd, yyyy",
+            locale
+        )
+        val date = inputFormat.parse(dateString)
+        outputFormat.format(date!!)
+    } catch (e: Exception) {
+        dateString
     }
 } 
